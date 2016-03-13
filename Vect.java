@@ -1,0 +1,3 @@
+class Vect {
+    double[] coord;
+}

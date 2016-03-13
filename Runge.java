@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.Scanner;
 
 public class Runge{
-    static int DIM = 2, MAXN = 20, R = 6371000, GEO = 35786000;
+    static int DIM = 3, MAXN = 20, R = 6371000, GEO = 35786000;
     static int n, ns = 0;
     static int secondsInDay = 86400, secondsInHour = 3600, secondsInMinute = 60, secondsInYear = secondsInDay * 365;
     static AstronomicalObject[] ao;
@@ -39,22 +39,21 @@ public class Runge{
             }
             ao[i] = new AstronomicalObject(y, dy, m);
         }
-        addSputnik(new double[]{0, R + GEO},
-                new double[]{4000, 0},
+        addSputnik(new double[]{0, R + GEO, 0},
+                new double[]{4000, 0, 0},
                 20);
-        addSputnik(new double[]{R + GEO * 5.5, 0},
-                new double[]{0, 1640},
+        addSputnik(new double[]{R + GEO * 5.5, 0, 0},
+                new double[]{0, 1640, 0},
                 30);
-        addSputnik(new double[]{R + GEO * 0.5, 0},
-                new double[]{0, 5665},
+        addSputnik(new double[]{R + GEO * 0.5, 0, 0},
+                new double[]{0, 5665, 0},
                 30);
 
     }
     private static void algo() {
-        double xn = 100, h = 10;
-        int numOfCoord = 100000, currCoord = 0, tEnd = secondsInYear * 2, steps = (int) (tEnd / xn);
+        double xn = 100, h = 40;
+        int numOfCoord = 1000000, currCoord = 0, tEnd = secondsInYear, steps = (int) (tEnd / xn);
         double ratio = (double)numOfCoord / (double)steps;
-
         DerivnV dn = new DerivnV();
         dn.createUn(ao, n + ns, DIM);
         Sandybox sb = new Sandybox(ao, n, DIM);
@@ -89,6 +88,7 @@ public class Runge{
                 sb.addValues(yn);
                 currCoord++;
             }
+            
 
         }
         f.getContentPane().add(sb);
