@@ -74,7 +74,7 @@ public class Runge{
             }
             for (int j = 0; j < nAims; j++) {
                 if (aims[j].satisf(sp[0], sp[1], sp[2])) {
-                    //do smth
+                    //do smths
                 }
             }
         }
