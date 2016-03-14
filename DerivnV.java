@@ -5,7 +5,7 @@ class DerivnV implements DerivnFunction {
     int n, dim;
     static double G = 6.67428 * 1e-11;
     public double[] derivn(double x, double[ ] y){
-        double[ ] dydx = new double [y.length];
+        double[] dydx = new double [y.length];
         double[] vector;
         for (int i = 1; i < n; i++) {
             for (int j = 0; j < dim; j++) {
@@ -16,7 +16,7 @@ class DerivnV implements DerivnFunction {
             for (AstronomicalObject anAo : ao) {
                 if (anAo == ao[i])
                     continue;
-                aoY = anAo.getY();
+                aoY = anAo.getY().toArray();
                 dr = 0;
                 for (int j = 0; j < dim; j++) {
                     dr += Math.pow((y[i * 2 * dim + j] - aoY[j]), 2);
@@ -29,9 +29,6 @@ class DerivnV implements DerivnFunction {
                     dydx[i * 2 * dim + dim + j] -= G * anAo.getM() / dr * vector[j];
                 }
             }
-        }
-        if (Math.abs(x - 3000) < 1) {
-            dydx[2] += 4000;
         }
         return dydx;
     }

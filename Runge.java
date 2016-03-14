@@ -8,45 +8,45 @@ import java.util.Scanner;
 
 public class Runge{
     static int DIM = 3, MAXN = 20, R = 6371000, GEO = 35786000;
-    static int n, ns = 0;
+    static int n, ns = 0, nAims = 0;
     static int secondsInDay = 86400, secondsInHour = 3600, secondsInMinute = 60, secondsInYear = secondsInDay * 365;
     static AstronomicalObject[] ao;
     static Sputnik[] sp;
+    static Aim[] aims;
     static RungeKutta rk;
     static JFrame f;
     public static void main(String[ ] arg) throws IOException {
         f = new JFrame();
-        readUniverse();
+        loadUniverse();
         algo();
         drawAlgo();
     }
-    private static void readUniverse() throws FileNotFoundException {
+    private static void loadUniverse() throws FileNotFoundException {
         Scanner reader = new Scanner(new File("objects.txt"));
         n = reader.nextInt();
         ao = new AstronomicalObject[MAXN];
         sp = new Sputnik[10];
         double m;
-        double[] y, dy;
+        Vect y, dy;
         for (int i = 0; i < n; i++) {
-            y = new double[DIM];
-            dy = new double[DIM];
             m = reader.nextDouble();
-            for (int j = 0; j < DIM; j++) {
-                y[j] = reader.nextDouble();
-            }
-            for (int j = 0; j < DIM; j++) {
-                dy[j] = reader.nextDouble();
-            }
+            y = new Vect(reader.nextDouble(), reader.nextDouble(), reader.nextDouble());
+            dy = new Vect(reader.nextDouble(), reader.nextDouble(), reader.nextDouble());
             ao[i] = new AstronomicalObject(y, dy, m);
         }
-        addSputnik(new double[]{0, R + GEO, 0},
-                new double[]{4000, 0, 0},
+        reader = new Scanner(new File("aims.txt"));
+        nAims = reader.nextInt();
+        for (int i = 0; i < nAims; i++) {
+            aims[i] = new Aim(reader.nextDouble(), reader.nextDouble());
+        }
+        addSputnik(new Vect(0, R + GEO, 0),
+                new Vect(4000, 0, 100),
                 20);
-        addSputnik(new double[]{R + GEO * 5.5, 0, 0},
-                new double[]{0, 1640, 0},
+        addSputnik(new Vect(R + GEO * 5.5, 0, 0),
+                new Vect(0, 1640, 10),
                 30);
-        addSputnik(new double[]{R + GEO * 0.5, 0, 0},
-                new double[]{0, 5665, 0},
+        addSputnik(new Vect(R + GEO * 0.5, 0, 0),
+                new Vect(0, 5665, 0),
                 30);
 
     }
@@ -57,47 +57,56 @@ public class Runge{
         DerivnV dn = new DerivnV();
         dn.createUn(ao, n + ns, DIM);
         Sandybox sb = new Sandybox(ao, n, DIM);
-        double[] y, dy, yn;
+        double[] yn;
         for (int i = 0; i < steps; i++) {
             rk = new RungeKutta();
             double[] y0 = new double[(n + ns) * DIM * 2];
-            for (int j = 0; j < n + ns; j++) {
-                y = ao[j].getY();
-                dy = ao[j].getDy();
-                for (int k = 0; k < DIM; k++) {
-                    y0[j * DIM * 2 + k] = y[k];
-                    y0[j * DIM * 2 + DIM + k] = dy[k];
-                }
-            }
+            inputY0(y0);
             rk.setInitialValueOfX(0);
             rk.setFinalValueOfX(xn);
             rk.setInitialValuesOfY(y0);
             rk.setStepSize(h);
             yn = rk.fourthOrder(dn);
-            for (int j = 0; j < n + ns; j++) {
-                y = new double[DIM];
-                dy = new double[DIM];
-                for (int k = 0; k < DIM; k++) {
-                    y[k] = yn[j * DIM * 2 + k];
-                    dy[k] = yn[j * DIM * 2 + DIM + k];
-                }
-                ao[j].setY(y);
-                ao[j].setDy(dy);
-            }
+            outputYN(yn);
             if ((double)i * ratio > currCoord || ratio > 1) {
                 sb.addValues(yn);
                 currCoord++;
             }
-            
-
+            for (int j = 0; j < nAims; j++) {
+                if (aims[j].satisf(sp[0], sp[1], sp[2])) {
+                    //do smth
+                }
+            }
         }
         f.getContentPane().add(sb);
+    }
+    private static void inputY0(double[] y0) {
+        for (int j = 0; j < n + ns; j++) {
+            double[] y = ao[j].getY().toArray();
+            double[] dy = ao[j].getDy().toArray();
+            for (int k = 0; k < DIM; k++) {
+                y0[j * DIM * 2 + k] = y[k];
+                y0[j * DIM * 2 + DIM + k] = dy[k];
+            }
+        }
+    }
+    private static void outputYN(double[] yn) {
+        for (int j = 0; j < n + ns; j++) {
+            double[] y = new double[DIM];
+            double[] dy = new double[DIM];
+            for (int k = 0; k < DIM; k++) {
+                y[k] = yn[j * DIM * 2 + k];
+                dy[k] = yn[j * DIM * 2 + DIM + k];
+            }
+            ao[j].setY(y);
+            ao[j].setDy(dy);
+        }
     }
     private static void drawAlgo() {
         f.setSize(500, 500);
         f.setVisible(true);
     }
-    private static void addSputnik(double[] y, double[] dy, double m) {
+    private static void addSputnik(Vect y, Vect dy, double m) {
         sp[ns] = new Sputnik(y, dy, 20);
         ao[n + ns] = sp[ns];
         ns++;

@@ -1,5 +1,5 @@
 class Sputnik extends AstronomicalObject {
-    public Sputnik(double[] y, double[] dy, double m) {
+    public Sputnik(Vect y, Vect dy, double m) {
         super(y, dy, m);
     }
 }
