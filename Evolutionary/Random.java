@@ -1,0 +1,32 @@
+package Evolutionary;
+
+import Simulation.Vect;
+
+class Random {
+    double R = 6371000, GEO = 35786000;
+    double posUpper = R + GEO * 4, posLower = R + GEO, accUpper = 3000, accLower = 400, engUpper = 0.3;
+    Individual createRandomIndividual(int n) {
+        Individual ans = new Individual(n);
+        for (int i = 0; i < 3; i++) {
+            ans.startingAcc[i] = createRandomVect(accLower, accUpper);
+            ans.startingPos[i] = createRandomVect(posLower, posUpper);
+        }
+        for (int i = 0; i < n - 2; i++) {
+            for (int j = 0; j < 3; j++) {
+                ans.accelerations[j][i] = createRandomVect(0, engUpper);
+            }
+        }
+        return ans;
+    }
+    Vect createRandomVect(double lowerBound, double upperBound) {
+        return new Vect(createRandomDouble(upperBound, lowerBound),
+                createRandomDouble(upperBound, lowerBound),
+                createRandomDouble(upperBound, lowerBound));
+    }
+    double createRandomDouble(double upperBound, double lowerBound) {
+        double a = Math.random() * (upperBound - lowerBound) + lowerBound;
+        if (Math.random() > 0.5)
+            a = -a;
+        return a;
+    }
+}

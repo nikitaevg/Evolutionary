@@ -1,22 +1,29 @@
+package Simulation;
+
 class AstronomicalObject {
     private Vect y, dy;
+    private double r;
     private double m;
     public AstronomicalObject() {
 
     }
-    public AstronomicalObject(Vect y, Vect dy, double m) {
+    AstronomicalObject(Vect y, Vect dy, double m, double r) {
         this.y = y;
         this.dy = dy;
         this.m = m;
+        this.r = r;
     }
-    public Vect getY() {
+    Vect getY() {
         return y;
     }
-    public Vect getDy() {
+    Vect getDy() {
         return dy;
     }
-    public double getM() {
+    double getM() {
         return m;
+    }
+    public double getR() {
+        return r;
     }
     public void setY(Vect y) {
         this.y = y;
@@ -33,6 +40,10 @@ class AstronomicalObject {
         this.dy.x = dy[0];
         this.dy.y = dy[1];
         this.dy.z = dy[2];
+    }
+    public boolean clash(Vect sp) {
+        double dist = sp.sub(y).length();
+        return (dist - r) < 0;
     }
 }
 

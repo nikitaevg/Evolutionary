@@ -1,11 +1,13 @@
+package Simulation;
+
 class Vect {
-    public double x, y, z;
-    public Vect(double x, double y, double z) {
+    double x, y, z;
+    Vect(double x, double y, double z) {
         this.x = x;
         this.y = y;
         this.z = z;
     }
-    public Vect(){
+    Vect(){
 
     }
 
@@ -19,7 +21,7 @@ class Vect {
         return new Vect(y * b.z - z * b.y, z * b.x - x * b.z, x * b.y - y * b.x);
     }
 
-    double size() {
+    double length() {
         return Math.sqrt(x * x + y * y + z * z);
     }
 
@@ -36,6 +38,10 @@ class Vect {
     }
 
     double angBetw(Vect a) {
-        return Math.acos((x * a.x + y * a.y + z * a.z) / (size() * a.size()));
+        return Math.acos((x * a.x + y * a.y + z * a.z) / (length() * a.length()));
+    }
+
+    Vect copy() {
+        return new Vect(x, y, z);
     }
 }

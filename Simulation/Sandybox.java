@@ -1,3 +1,5 @@
+package Simulation;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
@@ -7,7 +9,7 @@ class Sandybox extends JPanel {
     private static double NORM = (double)RR / (double)R;
     private AstronomicalObject[] ao;
     private ArrayList<Integer>[] all;
-    int n, dim;
+    private int n, dim;
     private static int X = 500, Y = 500;
     Sandybox(AstronomicalObject[] ao, int n, int dim) {
         this.ao = ao;
@@ -31,7 +33,7 @@ class Sandybox extends JPanel {
         }
     }
 
-    public void addValues(double[] val) {
+    void addValues(double[] val) {
         for (int i = 1; i < (val.length) / dim / 2; i++) {
             for (int k = 0; k < dim; k++) {
                 //if (Math.abs(val[i * dim * 2 + k + 1][j] - val[i * dim * 2 + k + 1]))
