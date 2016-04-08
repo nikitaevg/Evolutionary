@@ -1,15 +1,15 @@
 package Simulation;
 
 class AstronomicalObject {
-    private Vect y, dy;
+    Vect y, dy;
     private double r;
     private double m;
     public AstronomicalObject() {
 
     }
     AstronomicalObject(Vect y, Vect dy, double m, double r) {
-        this.y = y;
-        this.dy = dy;
+        this.y = y.copy();
+        this.dy = dy.copy();
         this.m = m;
         this.r = r;
     }
@@ -27,6 +27,22 @@ class AstronomicalObject {
     }
     public void setY(Vect y) {
         this.y = y;
+    }
+    public void setY(double x, double y, double z) {
+        if (this.y == null) {
+            this.y = new Vect(x, y, z);
+        }
+        this.y.x = x;
+        this.y.y = y;
+        this.y.z = z;
+    }
+    public void setDy(double x, double y, double z) {
+        if (this.dy == null) {
+            this.dy = new Vect(x, y, z);
+        }
+        this.dy.x = x;
+        this.dy.y = y;
+        this.dy.z = z;
     }
     public void setDy(Vect dy) {
         this.dy = dy;

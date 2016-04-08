@@ -1,8 +1,8 @@
 package Simulation;
 
-class Vect {
+public class Vect {
     double x, y, z;
-    Vect(double x, double y, double z) {
+    public Vect(double x, double y, double z) {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -33,6 +33,16 @@ class Vect {
         return new Vect(x - a.x, y - a.y, z - a.z);
     }
 
+    void setNull() {
+        x = 0;
+        y = 0;
+        z = 0;
+    }
+
+    Vect mulA(double a) {
+        return new Vect(x * a, y * a, z * a);
+    }
+
     double[] toArray() {
         return new double[]{x, y, z};
     }
@@ -41,7 +51,7 @@ class Vect {
         return Math.acos((x * a.x + y * a.y + z * a.z) / (length() * a.length()));
     }
 
-    Vect copy() {
+    public Vect copy() {
         return new Vect(x, y, z);
     }
 }

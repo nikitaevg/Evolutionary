@@ -2,11 +2,11 @@ package Evolutionary;
 
 import Simulation.Vect;
 
-class Random {
+public class Random {
     double R = 6371000, GEO = 35786000;
-    double posUpper = R + GEO * 4, posLower = R + GEO, accUpper = 3000, accLower = 400, engUpper = 0.3;
-    Individual createRandomIndividual(int n) {
-        Individual ans = new Individual(n);
+    double posUpper = R + GEO * 3, posLower = R + GEO, accUpper = 2000, accLower = 400, engUpper = 0.1;
+    public Individual createRandomIndividual(int n, int time) {
+        Individual ans = new Individual(n, time);
         for (int i = 0; i < 3; i++) {
             ans.startingAcc[i] = createRandomVect(accLower, accUpper);
             ans.startingPos[i] = createRandomVect(posLower, posUpper);

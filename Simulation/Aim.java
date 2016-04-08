@@ -2,17 +2,16 @@ package Simulation;
 
 class Aim {
     private int DIM = 3;
-    private double error = 0.0005 * Math.PI;
-    private double theta, fi;
+    private double error = 0.002 * Math.PI;
+    private double x, y, z;
     Aim(double theta, double fi) {
-        this.theta = theta;
-        this.fi = fi;
+        x = Math.sin(theta) * Math.cos(fi) * 1e2;
+        y = Math.sin(theta) * Math.sin(fi) * 1e2;
+        z = Math.cos(theta) * 1e2;
     }
     boolean satisf(Sputnik a, Sputnik b, Sputnik c) {
-        Vect x = b.getY().sub(a.getY());
-        Vect y = c.getY().sub(a.getY());
-        Vect mul = x.mul(y);
-        Vect aim = new Vect(Math.sin(theta) * Math.cos(fi) * 1e5, Math.sin(theta) * Math.sin(fi) * 1e5, Math.cos(theta) * 1e5);
-        return (Math.abs(aim.angBetw(mul)) < error);
+        Vect mul = (b.getY().sub(a.getY())).mul(c.getY().sub(a.getY()));
+        Vect aim = new Vect(this.x, this.y, this.z);
+        return (Math.abs(aim.angBetw(mul)) < error || Math.abs(aim.angBetw(mul.mulA(-1))) < error);
     }
 }

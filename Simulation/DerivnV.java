@@ -49,9 +49,8 @@ class DerivnV implements DerivnFunction {
     }
 
     void changeAcc(Vect a, Vect b, Vect c, int objects) {
-        accel = new Vect[n];
         for (int i = 0; i < objects; i++)
-            accel[i] = new Vect(0, 0, 0);
+            accel[i].setNull();
         accel[objects] = a;
         accel[objects + 1] = b;
         accel[objects + 2] = c;
