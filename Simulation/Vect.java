@@ -7,7 +7,7 @@ public class Vect {
         this.y = y;
         this.z = z;
     }
-    Vect(){
+    public Vect(){
 
     }
 
@@ -17,7 +17,7 @@ public class Vect {
         z = a[2];
     }
 
-    Vect mul(Vect b) {
+    Vect mulVect(Vect b) {
         return new Vect(y * b.z - z * b.y, z * b.x - x * b.z, x * b.y - y * b.x);
     }
 

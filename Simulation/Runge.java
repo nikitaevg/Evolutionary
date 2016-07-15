@@ -6,13 +6,14 @@ import javax.swing.*;
 
 public class Runge{
     private static int DIM = 3, MAXAIMS = 500;
-    private static int secondsInDay = 86400, secondsInHour = 3600, secondsInMinute = 60, secondsInYear = secondsInDay * 365;
+    private static int secondsInDay = 86400, secondsInHour = 3600,
+            secondsInMinute = 60, secondsInYear = secondsInDay * 365;
     private int ans = 0;
-    boolean[] used;
     private boolean log;
     private boolean toDraw;
     private Sandybox sb;
     private RungeKutta rk;
+    private Delaunay del;
     private Universe universe;
     private JFrame f;
     public int run(Vect[] SpPos, Vect[] SpAcc,
@@ -26,9 +27,11 @@ public class Runge{
         try {
             universe.loadUniverse(SpPos, SpAcc);
         } catch (Exception e) {
-            print("Couldn't load Universe");
+            e.printStackTrace();
+            print(e.getMessage());
             return -1;
         }
+        del = new Delaunay();
         algo(accelerations, endTime);
         print("Simulation finished");
         if (draw) {
@@ -40,21 +43,18 @@ public class Runge{
 
     private void algo(Vect[][] accelerations, int tEnd) {
         double xn = 10, h = 10;
-        used = new boolean[MAXAIMS];
         lastLog = 0;
         ans = 0;
         int numOfCoord = 100000, currCoord = 0, steps = (int) (tEnd / xn), lastPhoto = -1;
         double timeLimit = 0.5;
         double ratio = (double)numOfCoord / (double)steps;
         DerivnV dn = new DerivnV();
+        Delaunay.buildConvex(universe.aims);
         dn.createUn(universe.ao, universe.n + universe.ns, DIM);
-        if (toDraw) {
-            sb = new Sandybox(universe.ao, universe.n, DIM, numOfCoord);
-        }
+        sb = new Sandybox(universe.ao, universe.n, DIM);
         double[] yn;
         double[] y0 = new double[(universe.n + universe.ns) * DIM * 2];
         for (int i = 0; i < steps; i++) {
-
             dn.changeAcc(accelerations[0][(int)(i * xn) / secondsInDay],
                     accelerations[1][(int)(i * xn) / secondsInDay],
                     accelerations[2][(int)(i * xn) / secondsInDay], universe.n);
@@ -67,7 +67,7 @@ public class Runge{
                 currCoord++;
             }
             if ((i * xn - lastPhoto) >= timeLimit * (double)secondsInDay || lastPhoto == -1) {
-                int t = universe.checkSputniks();
+                int t = universe.checkSputniks(del);
                 if(t != -1) {
                     ans++;
                     lastPhoto = (int) (i * xn);
@@ -107,9 +107,10 @@ public class Runge{
 
     private int lastLog;
     private void print(int i, int steps) {
-        if (lastLog < i * 100 / steps && log) {
+        int t = 10;
+        if (lastLog < i * t / steps && log) {
             lastLog++;
-            System.out.println(lastLog + "% completed.");
+            System.out.println(lastLog * t + "% completed.");
         }
     }
 

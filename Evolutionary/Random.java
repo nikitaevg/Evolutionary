@@ -4,7 +4,7 @@ import Simulation.Vect;
 
 public class Random {
     double R = 6371000, GEO = 35786000;
-    double posUpper = R + GEO * 3, posLower = R + GEO, accUpper = 2000, accLower = 400, engUpper = 0.1;
+    double posUpper = R + GEO * 3, posLower = R + GEO * 1.5, accUpper = 1300, accLower = 900, engUpper = 0.1;
     public Individual createRandomIndividual(int n, int time) {
         Individual ans = new Individual(n, time);
         for (int i = 0; i < 3; i++) {

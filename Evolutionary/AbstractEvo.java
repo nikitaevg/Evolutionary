@@ -12,7 +12,6 @@ public abstract class AbstractEvo extends Random implements EvolutionaryAlgorith
     public Individual algorithm(int numberOfIterations, int n, int timeEnd,
                                 int mu, int lambda) {
         int time = 0;
-
         Individual ans;
         double maxVal = -1e10;
         Individual[] currInd = new Individual[mu + lambda];
@@ -25,9 +24,10 @@ public abstract class AbstractEvo extends Random implements EvolutionaryAlgorith
             performAlgorithm(currInd, mu, lambda);
             if (currInd[0].getValue() > maxVal) {
                 maxVal = currInd[0].getValue();
+                System.out.println("Found new good answer " + maxVal + " at " + time + " iteration");
                 ans = currInd[0].copy();
             }
-            System.gc();
+//            System.gc();
             time++;
         }
         return ans;

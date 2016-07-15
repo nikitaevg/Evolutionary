@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 public class MuPlusLambda extends AbstractEvo {
-    double THRESHOLD = 0.5;
+    double THRESHOLD = 0.1;
     void performAlgorithm(Individual[] individuals, int mu, int lambda) {
 
         for (int i = mu; i < lambda + mu; i++) {
@@ -13,6 +13,7 @@ public class MuPlusLambda extends AbstractEvo {
         }
         for (int i = 0; i < mu + lambda; i++) {
             new Run(individuals[i]).start();
+//            individuals[i].getValue();
         }
         Arrays.sort(individuals, new Compare());
     }
