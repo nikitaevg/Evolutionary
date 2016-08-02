@@ -1,5 +1,6 @@
 package Simulation;
 
+import Evolutionary.Report;
 import flanagan.integration.RungeKutta;
 
 import javax.swing.*;
@@ -8,78 +9,111 @@ public class Runge{
     private static int DIM = 3, MAXAIMS = 500;
     private static int secondsInDay = 86400, secondsInHour = 3600,
             secondsInMinute = 60, secondsInYear = secondsInDay * 365;
-    private int ans = 0;
+    private double specImp = 5000, F = 0.1;
+    private double ans = 0;
+    private Vect zeroVect = new Vect(0, 0, 0);
     private boolean log;
     private boolean toDraw;
-    private Sandybox sb;
+    private Sandybox sb; //Sandybox is class for drawing
+    private int[] currTime = new int[3];
+    private int approaches = 0, photos = 0;
+    private double[] maxDist = new double[]{0, 0, 0};
     private RungeKutta rk;
     private Delaunay del;
     private Universe universe;
     private JFrame f;
-    public int run(Vect[] SpPos, Vect[] SpAcc,
-                          Vect[][] accelerations, boolean draw, boolean toLog, int endTime) {
+    public Report run(int[] startingTime, Vect[] spSpeed,
+                      Vect[][] accelerations, boolean draw, boolean toLog, int endTime) {
         toDraw = draw;
         if (toDraw)
             f = new JFrame();
         universe = new Universe();
         log = toLog;
-        print("Starting simulation");
+//        print("Starting simulation");
         try {
-            universe.loadUniverse(SpPos, SpAcc);
+            universe.loadUniverse();
         } catch (Exception e) {
             e.printStackTrace();
             print(e.getMessage());
-            return -1;
+            return new Report(-1, maxDist, approaches, photos);
         }
         del = new Delaunay();
-        algo(accelerations, endTime);
-        print("Simulation finished");
+        algo(startingTime, spSpeed, accelerations, endTime);
+//        print("Simulation finished");
         if (draw) {
             drawAlgo();
         }
 
-        return ans;
+        return new Report(ans, maxDist, approaches, photos);
     }
 
-    private void algo(Vect[][] accelerations, int tEnd) {
-        double xn = 10, h = 10;
-        lastLog = 0;
+    private Vect getValue(Vect[] val, int ind) {
+        return ((ind < 0) ? zeroVect : val[ind]);
+    }
+
+    private void algo(int[] startingTime, Vect[] spSpeed, Vect[][] accelerations, int tEnd) {
+        if (!Universe.checkFuel(spSpeed, accelerations)) {
+            print("Not enough fuel");
+            ans = -1e15;
+            return;
+        }
+        double xn = 10, h = 10; // xn -- how much seconds to run Runge, h -- seconds of each step in Runge (so there is only one step for each start, or smth like that)
+//        lastLog = 0;
         ans = 0;
         int numOfCoord = 100000, currCoord = 0, steps = (int) (tEnd / xn), lastPhoto = -1;
-        double timeLimit = 0.5;
+        double timeLimit = 30;
         double ratio = (double)numOfCoord / (double)steps;
         DerivnV dn = new DerivnV();
         Delaunay.buildConvex(universe.aims);
         dn.createUn(universe.ao, universe.n + universe.ns, DIM);
         sb = new Sandybox(universe.ao, universe.n, DIM);
         double[] yn;
+        System.arraycopy(startingTime, 0, currTime, 0, 3);
         double[] y0 = new double[(universe.n + universe.ns) * DIM * 2];
+        int[] currDay = new int[3];
+        boolean[] enginesStarted = new boolean[3];
         for (int i = 0; i < steps; i++) {
-            dn.changeAcc(accelerations[0][(int)(i * xn) / secondsInDay],
-                    accelerations[1][(int)(i * xn) / secondsInDay],
-                    accelerations[2][(int)(i * xn) / secondsInDay], universe.n);
+            for (int j = 0; j < 3; j++) {
+                currTime[j] += xn;
+                currDay[j] = (currTime[j] / secondsInDay);
+                if (currTime[j] >= 0 && !enginesStarted[j]) {
+                    universe.sp[j].addDy(spSpeed[j]);
+                    enginesStarted[j] = true;
+                }
+            }
+            //currDay = (int)(i * xn) / secondsInDay;
+            dn.changeAcc(getValue(accelerations[0], currDay[0]),
+                    getValue(accelerations[1], currDay[1]),
+                    getValue(accelerations[2], currDay[2]), universe.n);
             universe.inputY0(y0);
+            universe.changeM(getValue(accelerations[0], currDay[0]),
+                    getValue(accelerations[1], currDay[1]),
+                    getValue(accelerations[2], currDay[2]), xn);
             rk = initRK(xn, h, y0);
             yn = rk.fourthOrder(dn);
             universe.outputYN(yn);
+            report();
             if (toDraw && ((double)i * ratio > currCoord || ratio > 1)) {
                 sb.addValues(yn);
                 currCoord++;
             }
             if ((i * xn - lastPhoto) >= timeLimit * (double)secondsInDay || lastPhoto == -1) {
-                int t = universe.checkSputniks(del);
-                if(t != -1) {
-                    ans++;
+                double t = universe.checkSputniks(del);
+                if(t > 0) {
+                    photos++;
+                    ans += t;
                     lastPhoto = (int) (i * xn);
 
                 }
             }
             if (universe.checkCrash()) {
                 print("Crash occurred");
-                ans = (int)-1e9;
+                if (toDraw)
+                    f.getContentPane().add(sb);
+                ans = -1e15;
                 return;
             }
-            print(i, steps);
+//            print(i, steps);
             //System.gc();
         }
         if (toDraw)
@@ -105,13 +139,20 @@ public class Runge{
         return rk;
     }
 
-    private int lastLog;
-    private void print(int i, int steps) {
-        int t = 10;
-        if (lastLog < i * t / steps && log) {
-            lastLog++;
-            System.out.println(lastLog * t + "% completed.");
+    private void report() { // calculates maxDist and number of approaches
+        for (int i = 0; i < 3; i++) {
+            maxDist[i] = Math.max(maxDist[i], universe.sp[i].getY().length());
+            approaches += (universe.sp[i].getY().sub(universe.ao[1].getY()).length() < 6 * 1e6) ? 1 : 0;
         }
     }
+
+//    private int lastLog;
+//    private void print(int i, int steps) {
+//        int t = 10;
+//        if (lastLog < i * t / steps && log) {
+//            lastLog++;
+//            System.out.println(lastLog * t + "% completed.");
+//        }
+//    }
 
 }

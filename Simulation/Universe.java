@@ -10,11 +10,14 @@ import java.util.Scanner;
 class Universe {
     int n = 0, ns = 0;
     private static int DIM = 3, MAXN = 6, R = 6371000, GEO = 35786000, nAims = 0, MAXAIMS = 450;
-    AstronomicalObject[] ao;
-    private int lastStar;
+    private static double minDist = 6578140, maxDist = 1e9, acceleration = 7700, minFuel = 1890;
+    AstronomicalObject[] ao; // ao -- array of AOs (Earth, Moon), and also contains sputniks, that are from array sp
+    private static double imp = 5000;
     Sputnik[] sp;
     Aim[] aims;
-    void loadUniverse(Vect[] SpPos, Vect[] SpAcc) throws FileNotFoundException {
+    private Vect[] startingSpeed = new Vect[]{new Vect(0, acceleration, 0), new Vect(-acceleration, 0, 0), new Vect(0, -acceleration, 0)};
+    private Vect[] startingPos = new Vect[]{new Vect(R + 400000, 0, 0), new Vect(0, -R - 400000, 0), new Vect(-R - 400000, 0, 0)};
+    void loadUniverse() throws FileNotFoundException { // inputs objects and aims and creates sputniks
         Scanner reader = new Scanner(new File("objects.txt"));
         n = reader.nextInt();
         ns = 0;
@@ -38,22 +41,16 @@ class Universe {
             aims[i] = new Aim(Math.toRadians(reader.nextDouble()), Math.PI / 2 - Math.toRadians(reader.nextDouble()));
         }
         reader.close();
-        addSputnik(SpPos[0],
-                SpAcc[0],
-                2000);
-        addSputnik(SpPos[1],
-                SpAcc[1],
-                2000);
-        addSputnik(SpPos[2],
-                SpAcc[2],
-                2000);
+        for (int i = 0; i < 3; i++) {
+            addSputnik(startingPos[i], startingSpeed[i], 4000);
+        }
     }
     private void addSputnik(Vect y, Vect dy, double m) {
         sp[ns] = new Sputnik(y, dy, m, 5);
         ao[n + ns] = sp[ns];
         ns++;
     }
-    int checkSputniks(Delaunay del) {
+    double checkSputniks(Delaunay del) {
 //        int ans = -1;
 //        for (int j = 0; j < nAims; j++) {
 //            if (aims[j].satisf(sp[0], sp[1], sp[2])) {
@@ -65,16 +62,22 @@ class Universe {
 //        Vect mul = null;
 //        if (a.getKey() != -1) {
 //            mul = null;
+//            ok++;
 //        }
 //        if ((a.getKey() == -1 && ans != -1) || (a.getKey() != -1 && ans == -1)) {
 //            System.out.println("Problem");
 //            mul = (sp[1].getY().sub(sp[0].getY())).mulVect(sp[2].getY().sub(sp[0].getY()));
+//            ang = mul.angBetweenLines(a.getValue());
 //        }
         return del.nearestFace(sp[0], sp[1], sp[2]);
 //        return a.getKey();
     }
 
-    boolean checkCrash() {
+    boolean checkCrash() { // checks whether sputnik is too far away or it crashed
+        for (Sputnik s : sp) {
+            if (s.getY().length() > maxDist || s.getY().length() < minDist)
+                return true;
+        }
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < ns; j++) {
                 if (ao[i].clash(sp[j].getY()))
@@ -84,20 +87,51 @@ class Universe {
         return false;
     }
 
-    void inputY0(double[] y0) {
+    private double[] y = new double[3];
+    private double[] dy = new double[3];
+
+    void inputY0(double[] y0) { //inserts data for starting Runge
         for (int j = 0; j < n + ns; j++) {
-            double[] y = ao[j].getY().toArray();
-            double[] dy = ao[j].getDy().toArray();
+            ao[j].getY().toArray(y);
+            ao[j].getDy().toArray(dy);
             for (int k = 0; k < DIM; k++) {
                 y0[j * DIM * 2 + k] = y[k];
                 y0[j * DIM * 2 + DIM + k] = dy[k];
             }
         }
     }
-    void outputYN(double[] yn) {
+    void outputYN(double[] yn) { // loads data from yn to Universe after Runge finished
         for (int j = 0; j < n + ns; j++) {
-            ao[j].setY(new Vect(yn[j * DIM * 2], yn[j * DIM * 2 + 1], yn[j * DIM * 2 + 2]));
-            ao[j].setDy(new Vect(yn[j * DIM * 2 + DIM], yn[j * DIM * 2 + 1 + DIM], yn[j * DIM * 2 + 2 + DIM]));
+            ao[j].setY(yn[j * DIM * 2], yn[j * DIM * 2 + 1], yn[j * DIM * 2 + 2]);
+            ao[j].setDy(yn[j * DIM * 2 + DIM], yn[j * DIM * 2 + 1 + DIM], yn[j * DIM * 2 + 2 + DIM]);
         }
+    }
+
+    private void decreaseM(Vect a, Sputnik s, double seconds) {
+        s.setM(s.getM() - (a.length() / imp) * seconds);
+    }
+
+    void changeM(Vect a, Vect b, Vect c, double seconds) { // calculates fuel consumption
+        decreaseM(a, sp[0], seconds);
+        decreaseM(b, sp[1], seconds);
+        decreaseM(c, sp[2], seconds);
+    }
+
+    static boolean checkFuel(Vect[] spSpeed, Vect[][] acceleration) { // checks whether it is enough fuel to fly
+        double g = 9.81, I = 450;
+        int secondsInDay = 86400;
+        double[] mass = new double[]{4000, 4000, 4000};
+        for (int i = 0; i < 3; i++) {
+            mass[i] *= Math.exp(-spSpeed[i].length() / (g * I));
+        }
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < acceleration[0].length; j++) {
+                mass[i] -= acceleration[i][j].length() / imp * secondsInDay;
+        }
+        for (double a : mass) {
+            if (a < minFuel)
+                return false;
+        }
+        return true;
     }
 }

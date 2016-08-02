@@ -23,9 +23,9 @@ class Sandybox extends JPanel {
     }
     public void paint(Graphics g) {
         Graphics2D g2 = (Graphics2D)g;
-        double[] aoY;
+        double[] aoY = new double[3];
         for (int i = 0; i < 1; i++) {
-            aoY = ao[i].getY().toArray();
+            ao[i].getY().toArray(aoY);
             g2.drawOval((int)(X / 2 + aoY[0] * NORM - RR), (int)(Y / 2 - aoY[1] * NORM - RR), RR * 2, RR * 2);
         }
         for (int i = 0; i < all[0].size(); i++) {

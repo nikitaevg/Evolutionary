@@ -4,7 +4,7 @@ import javafx.util.Pair;
 
 import java.util.*;
 
-public class Delaunay {
+public class Delaunay { // first part creates Delaunay triangulation. The second part finds nearest point
     private static int AIMS = 450;
     private static double THOLD = Math.PI / 500;
     private static boolean convexBuilt = false;
@@ -58,7 +58,8 @@ public class Delaunay {
         }
         double[] eq() {
             Vect n = vects[1].sub(vects[0]).mulVect(vects[2].sub(vects[0]));
-            return new double[]{n.x, n.y, n.z, -n.x * vects[0].x - n.y * vects[0].y - n.z * vects[0].z};
+            return new double[]{n.getX(), n.getY(), n.getZ(), -n.getX() * vects[0].getX()
+                    - n.getY() * vects[0].getY() - n.getZ() * vects[0].getZ()};
         }
     }
     private static Pair<HashSet<Integer>, Integer> checkFaces(Vect x) {
@@ -66,7 +67,7 @@ public class Delaunay {
         int last = -1;
         for (int i = 0; i < faces.size(); i++) {
             Vect v = faces.get(i).edges[0].getVect().mulVect(faces.get(i).edges[1].getVect());
-            double angle = v.angBetw(x.sub(faces.get(i).edges[0].begin));
+            double angle = v.angBetween(x.sub(faces.get(i).edges[0].begin));
             if (angle > Math.PI / 2) {
                 ans.add(i);
                 last = i;
@@ -83,7 +84,6 @@ public class Delaunay {
             faces.get(pointer).connect(edge.bro.face);
         }
 
-        //KOPYPASTA!!!!
     }
 
     private static boolean[] used;
@@ -152,43 +152,102 @@ public class Delaunay {
         }
     }
 
-    private Face[] currFace = new Face[]{null, null};
-    private Map<Vect, Double> usedPoints;
+    //---------------------------------------------------------------------------
 
-    private static double sqr(Vect x, Vect y, Vect z) {
+    private static class Observe { // class to remember previous shots and to calculate P
+        private static double HEIGHTCONSTRAINT = 1e7;
+        private ArrayList<Double> heights;
+        private ArrayList<Double> buff;
+        Observe() {
+            heights = new ArrayList<>();
+            buff = new ArrayList<>();
+        }
+        private boolean add(double h) {
+            heights.add(h);
+            Collections.sort(this.heights);
+            for (int i = 0; i < heights.size() - 1; i++) {
+                if (heights.get(i + 1) / heights.get(i) < 3)
+                    return false;
+            }
+            return true;
+        }
+        private int innerAdd(double h) {
+            if (h < HEIGHTCONSTRAINT)
+                return 0;
+
+            switch (heights.size()){
+                case 3:
+                    return 0;
+                case 0:
+                    heights.add(h);
+                    return 1;
+                case 1:
+                    if (add(h))
+                        return 3;
+                    else
+                        return 1;
+                case 2:
+                    if (add(h))
+                        return 6;
+                    else if(heights.get(2) / heights.get(0) >= 3)
+                        return 3;
+                    else return 1;
+            }
+            return 0;
+        }
+        int addH(double h, boolean toWrite) {
+            if (heights.size() > 0) {
+                int a = 0;
+            }
+            buff = (ArrayList<Double>) heights.clone();
+            int ans = innerAdd(h);
+            if (!toWrite)
+                heights = (ArrayList<Double>) buff.clone();
+            return ans;
+        }
+    }
+
+    private Face[] currFace = new Face[]{null, null}; // two nearest faces
+    private Map<Vect, Observe> usedPoints;
+    private Set<Face> s = new HashSet<>();
+    private Queue<Face> q = new LinkedList<>();
+
+    private static double square(Vect x, Vect y, Vect z) { //square of the triangle
         double a = x.sub(y).length(), b = x.sub(z).length(), c = y.sub(z).length();
         double p = (a + b + c) / 2;
         return Math.sqrt(p * (p - a) * (p - b) * (p - c));
     }
 
-    private static boolean checkFace(Vect s, Face f) {
+    private static boolean checkFace(Vect s, Face f) { //whether s belongs to face f
         double[] eq = f.eq();
-        double t = (-eq[3]) / (eq[0] * s.x + eq[1] * s.y + eq[2] * s.z);
-        s = s.mulA(t);
-        return Math.abs(sqr(f.vects[0], f.vects[1], f.vects[2]) - sqr(f.vects[0], f.vects[1], s) - sqr(f.vects[2], f.vects[1], s) - sqr(f.vects[0], f.vects[2], s)) < EPS;
+        double t = (-eq[3]) / (eq[0] * s.getX() + eq[1] * s.getY() + eq[2] * s.getZ());
+        s.mulA(t);
+        return Math.abs(square(f.vects[0], f.vects[1], f.vects[2]) - square(f.vects[0], f.vects[1], s)
+                - square(f.vects[2], f.vects[1], s) - square(f.vects[0], f.vects[2], s)) < EPS;
     }
 
-    private static Vect pointByPoints(Vect a, Vect b, Vect c) {
+    private static Vect pointBySurface(Vect a, Vect b, Vect c) { // finds point on the sphere perpendicular to face
         Vect mul = (b.sub(a)).mulVect(c.sub(a));
-        mul = mul.mulA(1 / mul.length());
+        mul.mulA(1 / mul.length());
         return mul;
     }
 
-    private Face findFace(Vect x, boolean q) {
+    private Face findFace(Vect x, boolean q) { // linear search of faces
         for (Face f : faces) {
             if (q && currFace[0] == f)
                 continue;
             if (checkFace(x, f))
                 return f;
         }
-        return faces.get(0); // kostil
+        return faces.get(0);
     }
 
     private Face bfs(Face curr, Vect x, int i) {
+
         if(checkFace(x, curr))
             return curr;
-        Set<Face> s = new HashSet<>();
-        Queue<Face> q = new LinkedList<>();
+        s.clear();
+        q.clear();
         q.add(curr);
         while (!q.isEmpty()) {
             curr = q.poll();
@@ -200,11 +259,27 @@ public class Delaunay {
                     q.add(e.bro.face);
             }
         }
-        return curr; // kostil
+        return curr;
     }
 
-    int nearestFace(Sputnik a, Sputnik b, Sputnik c) {
-        Vect point = pointByPoints(a.getY(), b.getY(), c.getY());
+
+
+    private double fitness(Vect a, Vect b, Vect c, Vect x, Vect mul, boolean toWrite) {
+        double la = a.sub(b).length();
+        double lb = a.sub(c).length();
+        double lc = b.sub(c).length();
+        double p = (la + lb + lc) / 2;
+        double sq = Math.sqrt(p * (p - la) * (p - lb) * (p - lc));
+        double minH = (2 * sq / Math.max(Math.max(la, lb), lc));
+        if (!usedPoints.containsKey(x)) {
+            usedPoints.put(x, new Observe());
+        }
+        int P = usedPoints.get(x).addH(minH, toWrite);
+        return P * minH * (0.2 + Math.pow(Math.cos(x.angBetweenLines(mul)), 2)) / 1e3;
+    }
+
+    double nearestFace(Sputnik a, Sputnik b, Sputnik c) {
+        Vect point = pointBySurface(a.getY(), b.getY(), c.getY());
         if (currFace[0] == null) {
             for (int i = 0; i < 2; i++) {
                 currFace[i] = findFace(point, i == 1);
@@ -213,18 +288,24 @@ public class Delaunay {
         Vect mul = (b.getY().sub(a.getY())).mulVect(c.getY().sub(a.getY()));
         for (int i = 0; i < 2; i++)
             currFace[i] = bfs(currFace[i], point, (i + 1) % 2);
+        double maxF = 0;
+        double t;
+        Vect bestV = currFace[0].vects[0];
         for (Face face : currFace) {
             for (Vect v : face.vects) {
-                if (Math.abs(v.angBetw(mul)) < THOLD
-                        || Math.abs(v.angBetw(mul.mulA(-1))) < THOLD) {
-                    usedPoints.put(v, 1.);
-//                    return new Pair<>(1, v);
-            return 1;
+                t = fitness(a.getY(), b.getY(), c.getY(), v, mul, false);
+                if (t > maxF) {
+                    maxF = t;
+                    bestV = v;
                 }
+//                if (v.angBetweenLines(mul) < THOLD) {
+//                    return new Pair<>(1, v);
+//                    return 1;
+//                }
             }
         }
-
+        return fitness(a.getY(), b.getY(), c.getY(), bestV, mul, true);
 //        return new Pair<>(-1, null);
-        return -1;
+//        return -1;
     }
 }
