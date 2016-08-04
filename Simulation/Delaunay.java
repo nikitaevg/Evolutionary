@@ -5,10 +5,10 @@ import javafx.util.Pair;
 import java.util.*;
 
 public class Delaunay { // first part creates Delaunay triangulation. The second part finds nearest point
-    private static int AIMS = 450;
-    private static double THOLD = Math.PI / 500;
+    private static final int AIMS = 450;
+    private static final double THOLD = Math.PI / 500;
     private static boolean convexBuilt = false;
-    private static double EPS = 1e-5;
+    private static final double EPS = 1e-5;
     private static Vect[] points;
     private static int n;
     private static ArrayList<Face> faces;

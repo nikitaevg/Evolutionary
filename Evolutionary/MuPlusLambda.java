@@ -59,14 +59,14 @@ public class MuPlusLambda extends AbstractEvo {
                 write(changes(Math.abs(individual.startTime[i]), Math.abs(copy.startTime[i])));
             }
         for (int i = 0; i < 3; i++) {
-            if (changeRandomAngle(accLower, accUpper, copy.startingAcc[i], spTHRESHOLD)) {
+            if (changeRandomAngle(ACC_LOWER, accUpper, copy.startingAcc[i], spTHRESHOLD)) {
                 write("Starting acceleration vector" + func(i));
                 write(changes(individual.startingAcc[i], copy.startingAcc[i]));
             }
         }
         for (int j = 0; j < 3; j++) {
             for (int i = 0; i < n - 2; i++) {
-                if (changeRandomAngle(0, engUpper, copy.accelerations[j][i], THRESHOLD)) {
+                if (changeRandomAngle(0, ENG_UPPER, copy.accelerations[j][i], THRESHOLD)) {
                     write("Low thrust acceleration vector" + func(j, i));
                     write(changes(individual.accelerations[j][i], copy.accelerations[j][i]));
                 }

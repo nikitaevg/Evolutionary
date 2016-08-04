@@ -6,12 +6,12 @@ import flanagan.integration.RungeKutta;
 import javax.swing.*;
 
 public class Runge{
-    private static int DIM = 3, MAXAIMS = 500;
-    private static int secondsInDay = 86400, secondsInHour = 3600,
-            secondsInMinute = 60, secondsInYear = secondsInDay * 365;
-    private double specImp = 5000, F = 0.1;
+    private static final int DIM = 3, MAXAIMS = 500;
+    private static final int SECONDS_IN_DAY = 86400, SECONDS_IN_HOUR = 3600,
+            SECONDS_IN_MINUTE = 60, SECONDS_IN_YEAR = SECONDS_IN_DAY * 365;
+    private final double SPEC_IMP = 5000, F = 0.1;
     private double ans = 0;
-    private Vect zeroVect = new Vect(0, 0, 0);
+    private final Vect zeroVect = new Vect(0, 0, 0);
     private boolean log;
     private boolean toDraw;
     private Sandybox sb; //Sandybox is class for drawing
@@ -75,7 +75,7 @@ public class Runge{
         for (int i = 0; i < steps; i++) {
             for (int j = 0; j < 3; j++) {
                 currTime[j] += xn;
-                currDay[j] = (currTime[j] / secondsInDay);
+                currDay[j] = (currTime[j] / SECONDS_IN_DAY);
                 if (currTime[j] >= 0 && !enginesStarted[j]) {
                     universe.sp[j].addDy(spSpeed[j]);
                     enginesStarted[j] = true;
@@ -97,7 +97,7 @@ public class Runge{
                 sb.addValues(yn);
                 currCoord++;
             }
-            if ((i * xn - lastPhoto) >= timeLimit * (double)secondsInDay || lastPhoto == -1) {
+            if ((i * xn - lastPhoto) >= timeLimit * (double)SECONDS_IN_DAY || lastPhoto == -1) {
                 double t = universe.checkSputniks(del);
                 if(t > 0) {
                     photos++;

@@ -2,14 +2,13 @@ import Evolutionary.*;
 import Simulation.*;
 
 import java.io.IOException;
-import java.util.concurrent.*;
 
 public class Test { // starting class
-    private static int secondsInDay = 86400, secondsInHour = 3600,
-            secondsInMinute = 60, secondsInYear = secondsInDay * 365;
+    private static final int SECONDS_IN_DAY = 86400, SECONDS_IN_HOUR = 3600,
+            SECONDS_IN_MINUTE = 60, SECONDS_IN_YEAR = SECONDS_IN_DAY * 365;
     public static void main(String[] args) throws IOException {
         int numOfDays = 365 * 3; // number of days to fly
-        int time = secondsInDay * numOfDays;
+        int time = SECONDS_IN_DAY * numOfDays;
         boolean q = false;
 
         if (!q) {

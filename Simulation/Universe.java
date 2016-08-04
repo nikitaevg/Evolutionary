@@ -1,7 +1,5 @@
 package Simulation;
 
-import javafx.util.Pair;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
@@ -9,13 +7,14 @@ import java.util.Scanner;
 
 class Universe {
     int n = 0, ns = 0;
-    private static int DIM = 3, MAXN = 6, R = 6371000, GEO = 35786000, nAims = 0, MAXAIMS = 450;
-    private static double minDist = 6578140, maxDist = 1e9, acceleration = 7700, minFuel = 1890;
+    private static final int DIM = 3, MAXN = 6, R = 6371000, GEO = 35786000, MAXAIMS = 450;
+    private static int nAims;
+    private static final double MIN_DIST = 6578140, MAX_DIST = 1e9, ACCELERATION = 7700, MIN_FUEL = 1890;
     AstronomicalObject[] ao; // ao -- array of AOs (Earth, Moon), and also contains sputniks, that are from array sp
-    private static double imp = 5000;
+    private static double IMP = 5000;
     Sputnik[] sp;
     Aim[] aims;
-    private Vect[] startingSpeed = new Vect[]{new Vect(0, acceleration, 0), new Vect(-acceleration, 0, 0), new Vect(0, -acceleration, 0)};
+    private Vect[] startingSpeed = new Vect[]{new Vect(0, ACCELERATION, 0), new Vect(-ACCELERATION, 0, 0), new Vect(0, -ACCELERATION, 0)};
     private Vect[] startingPos = new Vect[]{new Vect(R + 400000, 0, 0), new Vect(0, -R - 400000, 0), new Vect(-R - 400000, 0, 0)};
     void loadUniverse() throws FileNotFoundException { // inputs objects and aims and creates sputniks
         Scanner reader = new Scanner(new File("objects.txt"));
@@ -75,7 +74,7 @@ class Universe {
 
     boolean checkCrash() { // checks whether sputnik is too far away or it crashed
         for (Sputnik s : sp) {
-            if (s.getY().length() > maxDist || s.getY().length() < minDist)
+            if (s.getY().length() > MAX_DIST || s.getY().length() < MIN_DIST)
                 return true;
         }
         for (int i = 0; i < n; i++) {
@@ -108,7 +107,7 @@ class Universe {
     }
 
     private void decreaseM(Vect a, Sputnik s, double seconds) {
-        s.setM(s.getM() - (a.length() / imp) * seconds);
+        s.setM(s.getM() - (a.length() / IMP) * seconds);
     }
 
     void changeM(Vect a, Vect b, Vect c, double seconds) { // calculates fuel consumption
@@ -126,10 +125,10 @@ class Universe {
         }
         for (int i = 0; i < 3; i++)
             for (int j = 0; j < acceleration[0].length; j++) {
-                mass[i] -= acceleration[i][j].length() / imp * secondsInDay;
+                mass[i] -= acceleration[i][j].length() / IMP * secondsInDay;
         }
         for (double a : mass) {
-            if (a < minFuel)
+            if (a < MIN_FUEL)
                 return false;
         }
         return true;

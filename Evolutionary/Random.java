@@ -3,21 +3,21 @@ package Evolutionary;
 import Simulation.Vect;
 
 public class Random {
-    private double R = 6371000, GEO = 35786000;
-    double accUpper = 3000, accLower = 250, engUpper = 0.1;
+    private final double R = 6371000, GEO = 35786000;
+    final double ACC_UPPER = 3000, ACC_LOWER = 250, ENG_UPPER = 0.1;
     int secondsInMonth = 2678400;
     public Individual createRandomIndividual(int n, int time) {
         Individual ans = new Individual(n, time);
         for (int i = 0; i < 3; i++) {
             ans.startingAcc[i] = new Vect();
-            changeRandomAngle(accLower, accUpper, ans.startingAcc[i], 1);
+            changeRandomAngle(ACC_LOWER, ACC_UPPER, ans.startingAcc[i], 1);
         }
         for (int i = 0; i < 3; i++)
             ans.startTime[i] = createRandomInt(0, secondsInMonth);
         for (int i = 0; i < n - 2; i++) {
             for (int j = 0; j < 3; j++) {
                 ans.accelerations[j][i] = new Vect();
-                changeRandomAngle(0, engUpper, ans.accelerations[j][i], 1);
+                changeRandomAngle(0, ENG_UPPER, ans.accelerations[j][i], 1);
             }
         }
         return ans;
